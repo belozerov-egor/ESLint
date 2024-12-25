@@ -12,24 +12,35 @@ jobs:
       matrix:
         node-version: [20]
     steps:
-      # Checkout the code
       - uses: actions/checkout@v3
 
-      # Set up Node.js
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      # Authenticate with npm
+      # Добавляем проверку наличия файлов
+      - name: Check files
+        run: |
+          ls -la
+          echo "Checking for index.js..."
+          if [ ! -f index.js ]; then
+            echo "index.js is missing!"
+            exit 1
+          fi
+
       - name: Authenticate with npm
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" > ~/.npmrc
 
-      # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Publish to npm
+      # Добавляем шаг для проверки содержимого пакета
+      - name: Pack and check contents
+        run: |
+          npm pack
+          tar -tvf *.tgz
+
       - name: Publish to npm
         run: npm publish --access public
